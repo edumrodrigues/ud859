@@ -3,6 +3,13 @@ package com.google.devrel.training.conference.spi;
 import static com.google.devrel.training.conference.service.OfyService.factory;
 import static com.google.devrel.training.conference.service.OfyService.ofy;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.logging.Logger;
+
+import javax.inject.Named;
+
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiMethod.HttpMethod;
@@ -21,20 +28,15 @@ import com.google.devrel.training.conference.domain.Announcement;
 import com.google.devrel.training.conference.domain.AppEngineUser;
 import com.google.devrel.training.conference.domain.Conference;
 import com.google.devrel.training.conference.domain.Profile;
+import com.google.devrel.training.conference.domain.Session;
 import com.google.devrel.training.conference.form.ConferenceForm;
 import com.google.devrel.training.conference.form.ConferenceQueryForm;
 import com.google.devrel.training.conference.form.ProfileForm;
 import com.google.devrel.training.conference.form.ProfileForm.TeeShirtSize;
+import com.google.devrel.training.conference.form.SessionForm;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.Work;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
-
-import javax.inject.Named;
 
 /**
  * Defines conference APIs.
@@ -526,4 +528,41 @@ public class ConferenceApi {
         // NotFoundException is actually thrown here.
         return new WrappedBoolean(result.getResult());
     }
+
+    @ApiMethod(
+            name = "getConferenceSessions",
+            path = "getConferenceSessions",
+            httpMethod = HttpMethod.GET
+    )
+    public List<Session> getConferenceSessions( @Named("websafeConferenceKey") final String websafeConferenceKey) throws Exception{
+    	if(websafeConferenceKey == null)
+    		throw new Exception("No conferency provided");
+    	return ofy().load().type(Session.class)
+                .ancestor(Key.create(Conference.class, websafeConferenceKey))
+                .order("startTime").list();
+    }
+
+    @ApiMethod(name = "createSession", path = "session", httpMethod = HttpMethod.POST)
+    public Session createSession(final User user, final SessionForm sessionForm)
+        throws UnauthorizedException {
+        if (user == null) {
+            throw new UnauthorizedException("Authorization required");
+        }
+        Conference conference = getConferencesCreated(user).get(0);
+        Key<Conference> conferenceKey = Key.create(Conference.class, conference.getId());
+        final Key<Session> sessionKey = factory().allocateId(conferenceKey, Session.class);
+        final long sessionId = sessionKey.getId();
+        Session session = new Session();
+        session.setConferenceKey(conferenceKey);
+        session.setDate(sessionForm.getDate());
+        session.setDuration(sessionForm.getDuration());
+        session.setHighlights(sessionForm.getHighlights());
+        session.setName(sessionForm.getName());
+        session.setSpeaker(sessionForm.getSpeaker());
+        session.setStartTime(sessionForm.getStartTime());
+        session.setType(sessionForm.getTypeOfSession());
+        ofy().save().entities(session, conference).now();
+        return session;
+    }
+
 }
