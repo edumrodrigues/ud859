@@ -20,8 +20,6 @@ public class Session {
     @Index
     private String name;
 
-    private String description;
-
     private List<String> highlights;
 
     @Parent
@@ -41,7 +39,23 @@ public class Session {
     
     private Integer startTime;
     
-    @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
+    
+    private Session(){}
+    
+    public Session(String name, List<String> highlights, Key<Conference> conferenceKey,
+			String speaker, Integer duration, String type, Date date, Integer startTime) {
+		super();
+		this.name = name;
+		this.highlights = highlights;
+		this.conferenceKey = conferenceKey;
+		this.speaker = speaker;
+		this.duration = duration;
+		this.type = type;
+		this.date = date;
+		this.startTime = startTime;
+	}
+
+	@ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
     public Key<Conference> getConferenceKey() {
         return conferenceKey;
     }
@@ -56,14 +70,6 @@ public class Session {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
 	}
 
 	public List<String> getHighlights() {

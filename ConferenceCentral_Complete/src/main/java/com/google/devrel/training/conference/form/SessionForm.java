@@ -12,6 +12,8 @@ public class SessionForm {
 	private Date date;
 	private Integer startTime;
 
+	private SessionForm(){};
+	
     public SessionForm(String name, List<String> highlights, String speaker, Integer duration, String typeOfSession,
 			Date date, Integer startTime) {
 		super();

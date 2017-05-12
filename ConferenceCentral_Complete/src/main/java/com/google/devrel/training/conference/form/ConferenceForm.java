@@ -38,7 +38,7 @@ public class ConferenceForm {
      * The end date of the conference.
      */
     private Date endDate;
-
+    
     /**
      * The capacity of the conference.
      */
