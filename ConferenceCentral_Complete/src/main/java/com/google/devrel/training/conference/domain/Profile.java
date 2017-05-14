@@ -1,12 +1,13 @@
 package com.google.devrel.training.conference.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.common.collect.ImmutableList;
 import com.google.devrel.training.conference.form.ProfileForm.TeeShirtSize;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.googlecode.objectify.annotation.Index;
 
 /**
  * Profile class stores user's profile data.
@@ -40,6 +41,8 @@ public class Profile {
      */
     private List<String> conferenceKeysToAttend = new ArrayList<>(0);
 
+    @Index
+    private List<String> whishSesionList = new ArrayList<>();
     /**
      * Just making the default constructor private.
      */
@@ -90,8 +93,22 @@ public class Profile {
     public TeeShirtSize getTeeShirtSize() {
         return teeShirtSize;
     }
-
-    /**
+    
+    public List<String> getWhishSesionList() {
+		return whishSesionList;
+	}
+    
+    public void addSessionToWhishList(String webKey){
+    	if(this.whishSesionList.contains(webKey))
+    		return;
+    	this.whishSesionList.add(webKey);
+    }
+    
+    public void removeSessionFromWhishList(String webKey){
+    	if(this.whishSesionList.contains(webKey))
+    		this.whishSesionList.remove(webKey);
+    }
+	/**
      * Getter for conferenceIdsToAttend.
      * @return an immutable copy of conferenceIdsToAttend.
      */

@@ -538,7 +538,7 @@ public class ConferenceApi {
     	Conference conference = getConference(websafeConferenceKey);
     	System.out.println(">>>>>>>>>>>>>>>>"+conference.getName());
 		//Key<Conference> conferenceKey = Key.create(websafeConferenceKey);
-    	return ofy().load().type(Session.class).ancestor(conference).list();
+    	return ofy().load().type(Session.class).filter("conferenceId = ", conference.getId()).list();
     	//return ofy().load().type(Session.class).ancestor(conference).list();
     }
 
@@ -549,7 +549,7 @@ public class ConferenceApi {
 		}
 //		if(websafeConferenceKey == null)
 //			throw new Exception("Conference is required");
-		String websafeConferenceKey = "ahJlZHUtcHJvamVjdC0xNjcxMTdyHgsSB1Byb2ZpbGUiATAMCxIKQ29uZmVyZW5jZRgBDA";
+		String websafeConferenceKey = "ahJlZHUtcHJvamVjdC0xNjcxMTdyHgsSB1Byb2ZpbGUiATAMCxIKQ29uZmVyZW5jZRgGDA";
 		Conference conference = getConference(websafeConferenceKey);
 		Key<Conference> conferenceKey = Key.create(Conference.class, conference.getId());
 		final Key<Session> sessionKey = factory().allocateId(conferenceKey, Session.class);
@@ -561,7 +561,7 @@ public class ConferenceApi {
 		String speaker = sessionForm.getSpeaker();
 		Integer startTime = sessionForm.getStartTime();
 		String type = sessionForm.getTypeOfSession();
-		Session session = new Session(name, highlights, conferenceKey, speaker, duration, type, date, startTime);
+		Session session = new Session(name, sessionId, conference.getId(), highlights, conferenceKey, speaker, duration, type, date, startTime);
 		ofy().save().entities(session, conference).now();
 		return session;
 	}
@@ -579,5 +579,78 @@ public class ConferenceApi {
 		if (session == null)
 			throw new NotFoundException("No Session found with key: " + websafeSessionKey);
 		return session;
+	}
+	
+	@ApiMethod(
+            name = "getConferenceSessionsByType",
+            path = "getConferenceSessionsByType",
+            httpMethod = HttpMethod.GET
+    )
+	public List<Session> getConferenceSessionsByType(@Named("websafeConferenceKey") final String websafeConferenceKey,
+			@Named("typeOfSession") final String typeOfSession) throws Exception{
+		if(websafeConferenceKey == null)
+    		throw new Exception("No conferency provided");
+    	Conference conference = getConference(websafeConferenceKey);
+    	return ofy().load().type(Session.class).filter("conferenceId = ", conference.getId()).filter("type = ", typeOfSession).list();
+
+	}
+	
+	@ApiMethod(
+            name = "getSessionsBySpeaker",
+            path = "getSessionsBySpeaker",
+            httpMethod = HttpMethod.GET
+    )
+	public List<Session> getSessionsBySpeaker(@Named("speaker") final String speaker) throws Exception{
+		if(speaker == null)
+    		throw new Exception("No speaker provided");
+    	return ofy().load().type(Session.class).filter("speaker = ", speaker).list();
+	}
+	
+	@ApiMethod(
+            name = "addSessionToWishlist",
+            path = "addSessionToWishlist",
+            httpMethod = HttpMethod.POST
+    )
+	public Profile addSessionToWishlist(final User user, @Named("sessionKey") final String sessionKey) throws Exception{
+		if(sessionKey == null)
+    		throw new Exception("No session provided");
+		Profile profile = getProfileFromUser(user, user.getUserId());
+		profile.addSessionToWhishList(getSession(sessionKey).getWebsafeKey());
+		ofy().save().entity(profile).now();
+		return profile;
+	}
+	
+	@ApiMethod(
+            name = "getSessionsInWishlist",
+            path = "getSessionsInWishlist",
+            httpMethod = HttpMethod.GET
+    )
+	public List<Session> getSessionsInWishlist(final User user) throws Exception{
+		if(user == null)
+    		throw new Exception("Autorization is required");
+		List<Session> sessions = new ArrayList<>();
+		Profile profile = getProfileFromUser(user, user.getUserId());
+		for(String webKey : profile.getWhishSesionList()){
+			try{
+				sessions.add(getSession(webKey));
+			}
+			catch (Exception e) {
+			}
+		}
+		return sessions;
+	}
+	
+	@ApiMethod(
+            name = "deleteSessionInWishlist",
+            path = "deleteSessionInWishlist",
+            httpMethod = HttpMethod.DELETE
+    )
+	public Profile deleteSessionInWishlist(final User user, @Named("sessionKey") final String sessionKey) throws Exception{
+		if(user == null)
+    		throw new Exception("Autorization is required");
+		Profile profile = getProfileFromUser(user, user.getUserId());
+		profile.removeSessionFromWhishList(sessionKey);
+		ofy().save().entity(profile).now();
+		return profile;
 	}
 }

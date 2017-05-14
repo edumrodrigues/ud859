@@ -25,8 +25,20 @@ public class Session {
     @Parent
     @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
     private Key<Conference> conferenceKey;
-
+    
     @Index
+    @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
+    private Long conferenceId;
+
+    public Long getConferenceId() {
+		return conferenceId;
+	}
+
+	public void setConferenceId(Long conferenceId) {
+		this.conferenceId = conferenceId;
+	}
+
+	@Index
     private String speaker;
     
     private Integer duration;
@@ -42,9 +54,11 @@ public class Session {
     
     private Session(){}
     
-    public Session(String name, List<String> highlights, Key<Conference> conferenceKey,
+    public Session(String name, Long id, Long conferenceId, List<String> highlights, Key<Conference> conferenceKey,
 			String speaker, Integer duration, String type, Date date, Integer startTime) {
 		super();
+		this.id = id;
+		this.conferenceId = conferenceId;
 		this.name = name;
 		this.highlights = highlights;
 		this.conferenceKey = conferenceKey;
@@ -63,6 +77,10 @@ public class Session {
     public String getWebsafeKey() {
         return Key.create(conferenceKey, Session.class, id).getString();
     }
+    
+	public Long getId() {
+		return id;
+	}
 
 	public String getName() {
 		return name;
